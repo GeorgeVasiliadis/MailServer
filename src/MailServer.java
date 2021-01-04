@@ -34,4 +34,8 @@ public class MailServer {
     public Boolean exit(){
         return true;
     }
+
+    public static void main(String[] args){
+
+    }
 }

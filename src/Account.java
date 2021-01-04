@@ -4,8 +4,10 @@ public class Account {
     private String username, password;
     private ArrayList<Email> mailbox;
 
-    public Account(){
-
+    public Account(String username, String password){
+        this.username = username;
+        this.password = password;
+        this.mailbox = new ArrayList<>();
     }
 
     public String getUsername(){
@@ -17,6 +19,6 @@ public class Account {
     }
 
     public ArrayList<Email> getMailbox(){
-        return mailbox;
+        return new ArrayList<>(mailbox);
     }
 }
