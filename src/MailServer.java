@@ -1,41 +1,16 @@
+import java.rmi.Naming;
+
 public class MailServer {
     public MailServer(){
 
     }
 
-    public Boolean register(){
-        return true;
-    }
-
-    public Boolean login(){
-        return true;
-    }
-
-    public Boolean newEmail(){
-        return true;
-    }
-
-    public Boolean showEmail(){
-        return true;
-    }
-
-    public Boolean readEmail(){
-        return true;
-    }
-
-    public Boolean deleteEmail(){
-        return true;
-    }
-
-    public Boolean logOut(){
-        return true;
-    }
-
-    public Boolean exit(){
-        return true;
-    }
-
     public static void main(String[] args){
-
+        try{
+            MailServerImplementation server = new MailServerImplementation();
+            Naming.rebind("MailServer", server);
+        } catch (Exception e){
+            System.out.println(e);
+        }
     }
 }
