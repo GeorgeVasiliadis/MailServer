@@ -42,15 +42,30 @@ public class MailServer{
         return false;
     }
 
-    public Boolean newEmail(String username, String receiver, String subject, String mainbody) throws RemoteException {
-        if(accounts.containsKey(username) && accounts.containsKey(receiver)){
-            Email email = new Email(username, receiver, subject, mainbody);
-            return accounts.get(receiver).pullEmail(email);
+    /**
+     * Creates a new e-mail and forwards it to desired receiver.
+     * @param sender who sends the e-mail.
+     * @param receiver who receives the e-mail. Should be a valid (registered) account.
+     * @param subject one line of subject
+     * @param mainbody multi-line body of e-mail.
+     * @return true if e-mail was sent successfully to appropriate receiver.
+     */
+    public Boolean newEmail(String sender, String receiver, String subject, String mainbody){
+        if(accounts.containsKey(sender) && accounts.containsKey(receiver)){
+            Email email = new Email(sender, receiver, subject, mainbody);
+            return accounts.get(receiver).submitEmail(email);
         }
         return false;
     }
 
-    public String showEmails(String username) throws RemoteException {
+    /**
+     * Creates a String representation of users mailbox and returns it.
+     * The representation contains the id of each e-mail, its status (seen/ unseen) and its subject.
+     * @param username the user who wants to get his mailbox represented.
+     * @return a string representing the user's current mailbox. If user-client does not exist a special String is returned
+     * instead.
+     */
+    public String showEmails(String username) {
         String str = "User " + username + " is not valid";
         if(accounts.containsKey(username)) {
             str = accounts.get(username).representEmails();
@@ -58,8 +73,16 @@ public class MailServer{
         return str;
     }
 
-    public String readEmail(String username, int id) throws RemoteException {
-        String str = "Invalid query.";
+    /**
+     * Fetches the String representation of an email and returns it.
+     * Every time the user reads an e-mail, this e-mail is considered as "seen".
+     * @param username the user who wants to read an email.
+     * @param id the index of user's email to be read.
+     * @return the string representation of desired e-mail. If there is no such e-mail (wrong index), it returns an
+     * empty String.
+     */
+    public String readEmail(String username, int id){
+        String str = "";
         if(accounts.containsKey(username)){
             Email email = accounts.get(username).getEmail(id);
             if(email != null){
@@ -70,18 +93,24 @@ public class MailServer{
         return str;
     }
 
-    public Boolean deleteEmail(String username, int id) throws RemoteException {
+    /**
+     * Deletes requested email form user's mailbox.
+     * @param username the user who want to delete an e-mail.
+     * @param id the specific e-mail to be deleted.
+     * @return true if e-mail was deleted successfully (if it existed in users mailbox and then it was removed).
+     */
+    public Boolean deleteEmail(String username, int id) {
         if(accounts.containsKey(username)){
-            accounts.get(username).deleteEmail(id);
+            return accounts.get(username).deleteEmail(id);
         }
+        return false;
+    }
+
+    public Boolean logOut() {
         return true;
     }
 
-    public Boolean logOut() throws RemoteException {
-        return true;
-    }
-
-    public Boolean exit() throws RemoteException {
+    public Boolean exit()  {
         return true;
     }
 
@@ -205,6 +234,71 @@ class Session extends Thread{
                     if(server.login(username, password)){
                         dos.writeUTF("ok");
                         loggedUser = username;
+
+                        // Logged-In Session
+                        while(run){
+
+                            // Fetch request
+                            request = dis.readUTF();
+
+                            if(request.equalsIgnoreCase("newemail")){
+
+                                // Get Data
+                                String receiver = dis.readUTF();
+                                String subject = dis.readUTF();
+                                String mainbody = dis.readUTF();
+
+                                // Send Email
+                                if(server.newEmail(loggedUser, receiver, subject, mainbody)){
+                                    response = "ok";
+                                } else {
+                                    response = "nok";
+                                }
+
+                                // Inform User
+                                dos.writeUTF(response);
+                            }
+
+                            // Represent Emails
+                            else if(request.equalsIgnoreCase("showemails")){
+                                response = server.showEmails(username);
+                                dos.writeUTF(response);
+                            }
+
+                            // Read Email
+                            else if(request.equalsIgnoreCase("reademail")){
+                                // Fetch index of e-mail
+                                request = dis.readUTF();
+
+                                // Retrieve requested e-mail
+                                response = server.readEmail(username, Integer.parseInt(request));
+
+                                // Return requested e-mail
+                                dos.writeUTF(response);
+                            }
+
+                            // Delete Email
+                            else if(request.equalsIgnoreCase("deleteemail")){
+                                // Fetch index of e-mail
+                                request = dis.readUTF();
+
+                                // Retrieve requested e-mail
+                                if(server.deleteEmail(username, Integer.parseInt(request))){
+                                    response = "ok";
+                                } else {
+                                    response = "nok";
+                                }
+
+                                // Return status
+                                dos.writeUTF(response);
+                            }
+
+                            // Log User Out
+                            else if(request.equalsIgnoreCase("logout")){
+                                loggedUser = "";
+                                break;
+                            }
+                        }
                     } else {
                         dos.writeUTF("nok");
                     }

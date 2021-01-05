@@ -22,7 +22,7 @@ public class Account {
         return new ArrayList<>(mailbox);
     }
 
-    public Boolean pullEmail(Email email){
+    public Boolean submitEmail(Email email){
         if(email != null){
             mailbox.add(0, email);
             return true;
@@ -32,14 +32,14 @@ public class Account {
 
     public Email getEmail(int index){
         Email email = null;
-        if(index >= 0 && index <= mailbox.size()){
+        if(index >= 0 && index < mailbox.size()){
             email = mailbox.get(index);
         }
         return email;
     }
 
     public Boolean deleteEmail(int index){
-        if(index >= 0 && index <= mailbox.size()){
+        if(index >= 0 && index < mailbox.size()){
             mailbox.remove(index);
             return true;
         }
@@ -48,11 +48,10 @@ public class Account {
 
     public String representEmails(){
         int i = 0;
-        String str = ">>> ___MailBox__" + username + "___";
+        String str = "";
         for(Email email:mailbox){
-            str += "\n" + "[" + (email.getNew()?"N":"_") + "] " + i++ + " " + email.getSubject();
+            str += "[" + (email.getNew()?"N":"_") + "] " + i++ + " " + email.getSubject() + "\n";
         }
-        str += "\n<<< ___MailBox__" + username + "___";;
         return str;
     }
 }

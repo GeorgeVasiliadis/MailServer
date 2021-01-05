@@ -199,7 +199,7 @@ public class MailClient {
                 // Log-In
                 if(request.equalsIgnoreCase("login")){
                     // Ask to start login procedure
-                    dos.writeUTF("login");
+                    dos.writeUTF(request);
 
                     // Username
                     print("Username:");
@@ -225,26 +225,131 @@ public class MailClient {
 
                             // Create new e-mail
                             if (request.equalsIgnoreCase("newemail")) {
-                                print("Requested to create a new email"); //todo
+
+                                // Ask to start creating a new e-mail
+                                dos.writeUTF(request);
+
+                                // Receiver
+                                print("Receiver");
+                                String receiver = read();
+                                dos.writeUTF(receiver);
+
+
+                                // Subject
+                                print("Subject:");
+                                String subject = read();
+                                dos.writeUTF(subject);
+
+                                // Main Body
+                                print("Main Body (enter \"<ok>\" to send):");
+                                String mainbody = "";
+                                String line;
+                                while(true){
+                                    line = read();
+                                    if(line.equalsIgnoreCase("<ok>")){
+                                        break;
+                                    }
+                                    mainbody += line + "\n";
+                                }
+                                dos.writeUTF(mainbody);
+
+                                response = dis.readUTF();
+                                if(response.equalsIgnoreCase("ok")){
+                                    print("E-mail was sent successfully!");
+                                } else {
+                                    print("Couldn't send e-mail.");
+                                }
                             }
 
                             // Show mailbox
                             else if (request.equalsIgnoreCase("showemails")) {
-                                print("Requested to show existing emails"); //todo
+                                // Ask to start presenting e-mails
+                                dos.writeUTF(request);
+
+                                // Fetch Data
+                                response = dis.readUTF();
+
+                                // Display Data
+                                if(response.isEmpty()){
+                                    print("There are no e-mails yet.");
+                                } else {
+                                    print(response);
+                                }
                             }
 
                             // Read a specific email
                             else if (request.equalsIgnoreCase("reademail")) {
-                                print("Requested to read an email"); //todo
+                                // Ask to start email-reading procedure
+                                dos.writeUTF(request);
+
+                                // Get index of desired e-mail
+                                String index;
+                                while(true){
+                                    print("E-mail ID to be read:");
+                                    index = read();
+                                    try{
+                                        int i = Integer.parseInt(index);
+                                        if (i >= 0){
+                                            break;
+                                        } else {
+                                            print("ID should be a non-negative integer.");
+                                        }
+                                    } catch (NumberFormatException e){
+                                        print("ID should be a non-negative integer.");
+                                    }
+                                }
+
+                                // Request a specific e-mail
+                                dos.writeUTF(index);
+
+                                // Fetch requested e-mail
+                                response = dis.readUTF();
+
+                                // Check e-mail validity
+                                if(!response.isEmpty()){
+                                    print(response);
+                                } else {
+                                    print("E-mail #" + index + " doesn't exist.");
+                                }
                             }
 
                             // Delete a specific email
                             else if (request.equalsIgnoreCase("deleteemail")) {
-                                print("Requested to delete an email"); //todo
+                                // Ask to start email-reading procedure
+                                dos.writeUTF(request);
+
+                                // Get index of desired e-mail to be deleted
+                                String index;
+                                while(true){
+                                    print("E-mail ID to be deleted:");
+                                    index = read();
+                                    try{
+                                        int i = Integer.parseInt(index);
+                                        if (i >= 0){
+                                            break;
+                                        } else {
+                                            print("ID should be a non-negative integer.");
+                                        }
+                                    } catch (NumberFormatException e){
+                                        print("ID should be a non-negative integer.");
+                                    }
+                                }
+
+                                // Request a specific e-mail
+                                dos.writeUTF(index);
+
+                                // Fetch response and inform user
+                                response = dis.readUTF();
+                                if(!response.isEmpty()){
+                                    print("E-mail #" + index + "was deleted successfully!");
+                                } else {
+                                    print("E-mail #" + index + " doesn't exist.");
+                                }
                             }
 
                             // Log user out
                             else if (request.equalsIgnoreCase("logout")){
+                                dos.writeUTF(request);
                                 break;
                             }
 
