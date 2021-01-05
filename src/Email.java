@@ -39,9 +39,7 @@ public class Email {
         String str = "Sender: " + sender + "\n" +
                 "Receiver: " + receiver + "\n" +
                 "Subject: " + subject + "\n" +
-                "+ - - - - - - - - +" + "\n" +
                 "Main Body: " + mainbody;
-
         return str;
     }
 }

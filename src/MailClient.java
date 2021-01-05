@@ -1,9 +1,21 @@
-import java.rmi.Naming;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.Scanner;
 
 public class MailClient {
     private static MailServerInterface mailServer;
     private static Scanner input;
+
+    private static void print(String message){
+        System.out.println(message);
+    }
+
+    private static String read(){
+        Scanner scanner = new Scanner(System.in);
+        return scanner.nextLine();
+    }
 
     private static void printBanner(){
         System.out.println("-------------");
@@ -12,11 +24,11 @@ public class MailClient {
     }
 
     private static void printGuestPrompt(){
-        System.out.println("==========");
-        System.out.println("> LogIn");
-        System.out.println("> SignIn");
-        System.out.println("> Exit");
-        System.out.println("==========");
+        print("==========");
+        print("> LogIn");
+        print("> SignIn");
+        print("> Exit");
+        print("==========");
     }
 
     private static void printUserPrompt(){
@@ -148,21 +160,72 @@ public class MailClient {
     }
 
     public static void main(String[] args){
-        input = new Scanner(System.in);
-        System.out.println("Please provide mail-server's IP (***.***.***.***): ");
-        String ip = input.nextLine();
+        Scanner scanner = new Scanner(System.in);
+        print("MailServer IP Address:");
+        String ip = scanner.nextLine();
+        print("MailServer Port:");
+        int port = scanner.nextInt();
 
-        try {
-            String mailServerURL = "rmi://" + ip + "/MailServer";
-            mailServer = (MailServerInterface) Naming.lookup(mailServerURL);
-            System.out.println("Connection to " + ip + " has been established.");
-            if(mailServer.register("george", "111"))System.out.println("STOP");
-            mailServer.register("dimitra", "222");
-            mailServer.register("alice", "333");
-            printWelcome();
-            guestMenu();
-        } catch (Exception e){
-            System.out.println(e);
+        ip = "127.0.0.1";
+        port = 5000;
+        Socket socket = null;
+        DataInputStream dis;
+        DataOutputStream dos;
+        String response;
+        String request;
+
+        try{
+            // Establish connection to server
+            socket = new Socket(ip, port);
+            dis = new DataInputStream(socket.getInputStream());
+            dos = new DataOutputStream(socket.getOutputStream());
+
+            // Ensure server is listening
+            response = dis.readUTF();
+            if(!response.equalsIgnoreCase("hello")){
+                print("Couldn't establish connection to server.");
+                socket.close();
+                System.exit(1);
+            }
+
+            print("Connection to server was established successfully!");
+            while(true) {
+                print("You are connected as guest.");
+                printGuestPrompt();
+                request = read();
+                if(request.equalsIgnoreCase("login")){
+                    print("You asked to log-in.");
+                } else if(request.equalsIgnoreCase("signin")){
+                    // Ask to start registration procedure
+                    dos.writeUTF("signin");
+
+                    // Username
+                    print("Username:");
+                    String username = read();
+                    dos.writeUTF(username);
+
+                    // Password
+                    print("Password:");
+                    String password = read();
+                    dos.writeUTF(password);
+
+                    // Check if registration was successful
+                    response = dis.readUTF();
+                    if(response.equalsIgnoreCase("ok")){
+                        print("User " + username + " was successfully registered!");
+                    } else {
+                        print("Registration failed.");
+                    }
+                } else if(request.equalsIgnoreCase("exit")){
+                    print("Thanks for using MailServer :D");
+                    socket.close();
+                    System.exit(0);
+                } else {
+                    print("Invalid Option.");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
             System.exit(1);
         }
     }

@@ -48,11 +48,11 @@ public class Account {
 
     public String representEmails(){
         int i = 0;
-        String str = "---MailBox - " + username + "---";
+        String str = ">>> ___MailBox__" + username + "___";
         for(Email email:mailbox){
             str += "\n" + "[" + (email.getNew()?"N":"_") + "] " + i++ + " " + email.getSubject();
         }
-        str += "\n---MailBox - " + username + "---";
+        str += "\n<<< ___MailBox__" + username + "___";;
         return str;
     }
 }
