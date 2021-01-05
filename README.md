@@ -1,9 +1,9 @@
-#Mail Server
+# Mail Server
 
 ## What does MailServer do
-####Short answer:
+#### Short answer:
 Nothing really :(
-####Long answer:
+#### Long answer:
 This project has been developed for academic reasons and thus it might not seem all that fancy.
 However, it is a good starting point for anyone who wants to get started with application layer protocols.
 Some cli-based, simple, general-mail features are provided:
@@ -17,4 +17,4 @@ This is a very simplistic approach of Email server-client protocol, written in J
 ## Contribution
 Feel free to extend any aspect of MailServer. Contributions are being accepted via pull-requests on *forked* repos.
 
-*\#ambitious*
+*#ambitious*
