@@ -28,7 +28,14 @@ public class MailServer{
         return false;
     }
 
-    public Boolean login(String username, String password) throws RemoteException {
+    /** Checks whether a user could log in with provided credentials.
+     * In order for a user to successfully login, he/she must have a valid (registered) username, and a password that
+     * matches the stored one.
+     * @param username the user who wants to log in.
+     * @param password the password of the user that wants to log in.
+     * @return true if user's credentials are correct and user can log in to the system.
+     */
+    public Boolean login(String username, String password){
         if(accounts.get(username) != null){
             return password.equals(accounts.get(username).getPassword());
         }
@@ -104,7 +111,7 @@ class Session extends Thread{
     final private Socket socket;
     final private DataInputStream dis;
     final private DataOutputStream dos;
-    private Boolean loggedIn;
+    private String loggedUser;
     private States currentState;
     private String response, request;
 
@@ -114,8 +121,7 @@ class Session extends Thread{
         this.socket = socket;
         this.dis = dis;
         this.dos = dos;
-
-        loggedIn = false;
+        loggedUser = "";
         currentState = States.SESSION;
     }
 
@@ -187,6 +193,21 @@ class Session extends Thread{
                 // Exit
                 if(request.equalsIgnoreCase("exit")){
                     run = false;
+                }
+
+                // Log-In
+                else if(request.equalsIgnoreCase("login")){
+                    // Get data
+                    String username = dis.readUTF();
+                    String password = dis.readUTF();
+
+                    // Log user in
+                    if(server.login(username, password)){
+                        dos.writeUTF("ok");
+                        loggedUser = username;
+                    } else {
+                        dos.writeUTF("nok");
+                    }
                 }
 
                 // Sign-In

@@ -189,13 +189,84 @@ public class MailClient {
             }
 
             print("Connection to server was established successfully!");
+
+            // Main Loop
             while(true) {
                 print("You are connected as guest.");
                 printGuestPrompt();
                 request = read();
+
+                // Log-In
                 if(request.equalsIgnoreCase("login")){
-                    print("You asked to log-in.");
-                } else if(request.equalsIgnoreCase("signin")){
+                    // Ask to start login procedure
+                    dos.writeUTF("login");
+
+                    // Username
+                    print("Username:");
+                    String username = read();
+                    dos.writeUTF(username);
+
+                    // Password
+                    print("Password:");
+                    String password = read();
+                    dos.writeUTF(password);
+
+                    // Check if login was successful
+                    response = dis.readUTF();
+                    if(response.equalsIgnoreCase("ok")){
+                        print("User " + username + " was successfully logged-in!");
+                        while(true) {
+                            // Print new prompt
+                            print("You are connected as " + username + ".");
+                            printUserPrompt();
+
+                            // Get request
+                            request = read();
+
+                            // Create new e-mail
+                            if (request.equalsIgnoreCase("newemail")) {
+                                print("Requested to create a new email"); //todo
+                            }
+
+                            // Show mailbox
+                            else if (request.equalsIgnoreCase("showemails")) {
+                                print("Requested to show existing emails"); //todo
+                            }
+
+                            // Read a specific email
+                            else if (request.equalsIgnoreCase("reademail")) {
+                                print("Requested to read an email"); //todo
+                            }
+
+                            // Delete a specific email
+                            else if (request.equalsIgnoreCase("deleteemail")) {
+                                print("Requested to delete an email"); //todo
+                            }
+
+                            // Log user out
+                            else if (request.equalsIgnoreCase("logout")){
+                                break;
+                            }
+
+                            // Exit
+                            else if (request.equalsIgnoreCase("exit")){
+                                print("Thanks for using MailServer :D");
+                                socket.close();
+                                System.exit(0);
+                            }
+
+                            // Typo
+                            else {
+                                print("Invalid Option.");
+                            }
+                        }
+                    } else {
+                        print("LogIn failed.\nPlease make sure you entered the right credentials.");
+                    }
+                }
+
+                // Sign-In
+                else if(request.equalsIgnoreCase("signin")){
                     // Ask to start registration procedure
                     dos.writeUTF("signin");
 
@@ -216,11 +287,17 @@ public class MailClient {
                     } else {
                         print("Registration failed.");
                     }
-                } else if(request.equalsIgnoreCase("exit")){
+                }
+
+                // Exit
+                else if(request.equalsIgnoreCase("exit")){
                     print("Thanks for using MailServer :D");
                     socket.close();
                     System.exit(0);
-                } else {
+                }
+
+                // Typo
+                else {
                     print("Invalid Option.");
                 }
             }
