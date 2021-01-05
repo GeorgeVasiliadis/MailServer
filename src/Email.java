@@ -4,7 +4,7 @@ public class Email {
     private String subject, mainbody;
 
     public Email(String sender, String receiver, String subject, String mainbody){
-        this.isNew = false;
+        this.isNew = true;
         this.sender = sender;
         this.receiver = receiver;
         this.subject = subject;
@@ -19,6 +19,10 @@ public class Email {
         return sender;
     }
 
+    public void makeSeen(){
+        isNew = false;
+    }
+
     public String getReceiver(){
         return receiver;
     }
@@ -29,5 +33,15 @@ public class Email {
 
     public String getMainbody(){
         return mainbody;
+    }
+
+    public String toString(){
+        String str = "Sender: " + sender + "\n" +
+                "Receiver: " + receiver + "\n" +
+                "Subject: " + subject + "\n" +
+                "+ - - - - - - - - +" + "\n" +
+                "Main Body: " + mainbody;
+
+        return str;
     }
 }

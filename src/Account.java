@@ -21,4 +21,38 @@ public class Account {
     public ArrayList<Email> getMailbox(){
         return new ArrayList<>(mailbox);
     }
+
+    public Boolean pullEmail(Email email){
+        if(email != null){
+            mailbox.add(0, email);
+            return true;
+        }
+        return false;
+    }
+
+    public Email getEmail(int index){
+        Email email = null;
+        if(index >= 0 && index <= mailbox.size()){
+            email = mailbox.get(index);
+        }
+        return email;
+    }
+
+    public Boolean deleteEmail(int index){
+        if(index >= 0 && index <= mailbox.size()){
+            mailbox.remove(index);
+            return true;
+        }
+        return false;
+    }
+
+    public String representEmails(){
+        int i = 0;
+        String str = "---MailBox - " + username + "---";
+        for(Email email:mailbox){
+            str += "\n" + "[" + (email.getNew()?"N":"_") + "] " + i++ + " " + email.getSubject();
+        }
+        str += "\n---MailBox - " + username + "---";
+        return str;
+    }
 }

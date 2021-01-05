@@ -19,6 +19,17 @@ public class MailClient {
         System.out.println("==========");
     }
 
+    private static void printUserPrompt(){
+        System.out.println("==========");
+        System.out.println("> NewEmail");
+        System.out.println("> ShowEmails");
+        System.out.println("> ReadEmail");
+        System.out.println("> DeleteEmail");
+        System.out.println("> Logout");
+        System.out.println("> Exit");
+        System.out.println("==========");
+    }
+
     private static void printWelcome(){
         printBanner();
         System.out.println("Hello, you connected as a guest.");
@@ -30,7 +41,63 @@ public class MailClient {
     }
 
     private static void userMenu(String username){
-        System.out.println("Yes, i live inside userMenu. What's wrong with you.");
+        String command;
+        while(true){
+            printUserPrompt();
+            command = input.next();
+            if(command.equalsIgnoreCase("NewEmail")){
+                try {
+                    System.out.println("Receiver:");
+                    String receiver = input.next();
+                    System.out.println("Subject:");
+                    String subject = input.next();
+                    input.nextLine();
+                    System.out.println("Text:");
+                    String mainbody = input.nextLine();
+                    if (!(receiver.isEmpty() || subject.isEmpty() || mainbody.isEmpty())){
+                        System.out.println("Email was created successfully!");
+                    } else {
+                        System.out.println("Email couldn't be created.");
+                    }
+                    if (mailServer.newEmail(username, receiver, subject, mainbody)) {
+                        System.out.println("Email was sent successfully!");
+                    } else {
+                        System.out.println("Email was rejected. Please try again.");
+                    }
+                } catch (Exception e){
+                    System.out.println(e);
+                }
+            }else if(command.equalsIgnoreCase("ShowEmails")){
+                try{
+                    System.out.println(mailServer.showEmails(username));
+                } catch (Exception e){
+                    System.out.println(e);
+                }
+            } else if(command.equalsIgnoreCase("ReadEmail")){
+                System.out.println("Number of desired Email:");
+                int id = input.nextInt();
+                try {
+                    System.out.println(mailServer.readEmail(username, id));
+                }catch (Exception e){
+                    System.out.println(e);
+                }
+            } else if(command.equalsIgnoreCase("DeleteEmail")){
+                System.out.println("Number of Email to delete:");
+                int id = input.nextInt();
+                try{
+                    mailServer.deleteEmail(username, id);
+                } catch (Exception e){
+                    System.out.println(e);
+                }
+            } else if(command.equalsIgnoreCase("LogOut")){
+                break;
+            } else if(command.equalsIgnoreCase("Exit")){
+                printBye();
+                System.exit(0);
+            } else{
+                System.out.println("Command \"" + command + "\" is invalid.");
+            }
+        }
     }
 
     private static void guestMenu(){
@@ -71,7 +138,8 @@ public class MailClient {
                 }
 
             } else if (command.equalsIgnoreCase("Exit")) {
-                break;
+                printBye();
+                System.exit(0);
             } else {
                 System.out.println("Command \"" + command + "\" is invalid.");
             }
@@ -88,9 +156,11 @@ public class MailClient {
             String mailServerURL = "rmi://" + ip + "/MailServer";
             mailServer = (MailServerInterface) Naming.lookup(mailServerURL);
             System.out.println("Connection to " + ip + " has been established.");
+            if(mailServer.register("george", "111"))System.out.println("STOP");
+            mailServer.register("dimitra", "222");
+            mailServer.register("alice", "333");
             printWelcome();
             guestMenu();
-            printBye();
         } catch (Exception e){
             System.out.println(e);
             System.exit(1);

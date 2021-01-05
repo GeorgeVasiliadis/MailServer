@@ -6,13 +6,13 @@ public interface MailServerInterface extends Remote{
 
     Boolean login(String username, String password) throws RemoteException;
 
-    Boolean newEmail() throws RemoteException;
+    Boolean newEmail(String username, String receiver, String subject, String mainbody) throws RemoteException;
 
-    Boolean showEmail() throws RemoteException;
+    String showEmails(String username) throws RemoteException;
 
-    Boolean readEmail() throws RemoteException;
+    String readEmail(String username, int id) throws RemoteException;
 
-    Boolean deleteEmail() throws RemoteException;
+    Boolean deleteEmail(String username, int id) throws RemoteException;
 
     Boolean logOut() throws RemoteException;
 
