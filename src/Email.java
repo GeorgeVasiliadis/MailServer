@@ -1,5 +1,11 @@
+/**
+ * Email represents the e-mail entity.
+ * It contains a sender, a receiver, a subject and the mainbody, as well as whether it has been read or not.
+ * @author George Vasiliadis
+ * @version 7/1/21
+ */
 public class Email {
-    private Boolean isNew;
+    private boolean isNew;
     private String sender, receiver;
     private String subject, mainbody;
 
@@ -11,35 +17,30 @@ public class Email {
         this.mainbody = mainbody;
     }
 
-    public Boolean getNew(){
+    boolean getNew(){
         return isNew;
     }
 
-    public String getSender(){
-        return sender;
-    }
-
-    public void makeSeen(){
-        isNew = false;
-    }
-
-    public String getReceiver(){
-        return receiver;
-    }
-
-    public String getSubject(){
+    String getSubject(){
         return subject;
     }
 
-    public String getMainbody(){
-        return mainbody;
+    String getSender(){
+        return sender;
     }
 
+    /**
+     * Toggles the corresponding boolean variable.
+     */
+    void makeSeen(){
+        isNew = false;
+    }
+
+    @Override
     public String toString(){
-        String str = "Sender: " + sender + "\n" +
+        return "Sender: " + sender + "\n" +
                 "Receiver: " + receiver + "\n" +
                 "Subject: " + subject + "\n" +
-                "Main Body: " + mainbody;
-        return str;
+                "Main Body: " + mainbody + "\n";
     }
 }

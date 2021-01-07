@@ -3,14 +3,92 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.rmi.RemoteException;
 import java.util.HashMap;
+import java.util.Scanner;
 
+/**
+ * MailServer implements the essential data-structure that stores and manages all user accounts.
+ *
+ * @author George Vasiliadis
+ * @version 7/1/21
+ */
 public class MailServer{
+
+    // Hashmap stores the registered accounts
     private HashMap<String, Account> accounts;
-    public MailServer() throws RemoteException {
+
+    public MailServer() {
         super();
         accounts = new HashMap<>();
+    }
+
+    public static void main(String[] args) {
+
+        // Ask user to provide a port number for server to run
+        System.out.println("Provide Hosting Port:");
+        Scanner scanner = new Scanner(System.in);
+
+        // Start initialize listening port
+        ServerSocket ss = null;
+        try {
+            int port = scanner.nextInt();
+            ss = new ServerSocket(port);
+        } catch (Exception e) {
+            System.out.println("Invalid or unavailable port");
+            System.exit(1);
+        }
+
+        // Initialize MailServer and populate it
+        MailServer server = new MailServer();
+        System.out.println("MailServer status: running...");
+        server.populateAccounts();
+
+        // Start listening for client connections
+        Socket socket;
+        while(true) {
+            try {
+                socket = ss.accept();
+                DataInputStream dis = new DataInputStream(socket.getInputStream());
+                DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+                Thread thread = new Session(server, dis, dos);
+                thread.start();
+            } catch (Exception e) {
+                System.out.println("A fatal error occurred.");
+                System.exit(1);
+            }
+        }
+    }
+
+    /**
+     * Used to populate accounts with some demo users and some demo e-mails.
+     */
+    private void populateAccounts(){
+        // Create demo users
+        register("george", "111");
+        register("donut", "222");
+        register("admin", "hardpassword");
+
+        // Send e-mails
+        newEmail("george", "donut", "Spam", "Hey there!\nThis is spam!\n");
+        newEmail("george", "admin", "Spam", "Hey there!\nThis is spam!\n");
+        newEmail("george", "george", "Spam", "Hey there!\nThis is spam!\n");
+
+        newEmail("donut", "george", "foo", "bar\n");
+        newEmail("donut", "george", "baz", "fizz\n");
+        newEmail("donut", "admin", "fuzz", "Lorem ipsum and stuff...\n");
+
+        newEmail("admin", "donut", "!Important!", "I hope to pass Signals " +
+         "and Systems this semester!\nI also hope to pass Digital Communications...\nThat's all folks!\n" +
+         "Yours sincerely,\nGeorge Vasiliadis 3466");
+        newEmail("admin", "donut", "DO NOT OPEN", "Gotcha!\n:P :P :P :P\n");
+        newEmail("admin", "admin", "Passwords", "No passwords in here, lol\n");
+
+
+        // Super-useless operation to extinguish some warnings
+        Account dummy = accounts.get("george");
+        if(!dummy.getUsername().equals("george")){
+            System.out.println("I hate warnings!");
+        }
     }
 
     /**
@@ -20,7 +98,7 @@ public class MailServer{
      * @param password the password of new user.
      * @return true if user was registered successfully.
      */
-    public Boolean register(String username, String password){
+    synchronized boolean register(String username, String password){
         if(!accounts.containsKey(username)) {
             accounts.put(username, new Account(username, password));
             return true;
@@ -35,7 +113,7 @@ public class MailServer{
      * @param password the password of the user that wants to log in.
      * @return true if user's credentials are correct and user can log in to the system.
      */
-    public Boolean login(String username, String password){
+    boolean login(String username, String password){
         if(accounts.get(username) != null){
             return password.equals(accounts.get(username).getPassword());
         }
@@ -50,7 +128,7 @@ public class MailServer{
      * @param mainbody multi-line body of e-mail.
      * @return true if e-mail was sent successfully to appropriate receiver.
      */
-    public Boolean newEmail(String sender, String receiver, String subject, String mainbody){
+    synchronized boolean newEmail(String sender, String receiver, String subject, String mainbody){
         if(accounts.containsKey(sender) && accounts.containsKey(receiver)){
             Email email = new Email(sender, receiver, subject, mainbody);
             return accounts.get(receiver).submitEmail(email);
@@ -59,16 +137,16 @@ public class MailServer{
     }
 
     /**
-     * Creates a String representation of users mailbox and returns it.
-     * The representation contains the id of each e-mail, its status (seen/ unseen) and its subject.
+     * Creates a one-string-representation of users mailbox and returns it.
+     * The representation contains the status of e-mails (seen/ unseen), their IDs, the senders and their subjects.
      * @param username the user who wants to get his mailbox represented.
      * @return a string representing the user's current mailbox. If user-client does not exist a special String is returned
      * instead.
      */
-    public String showEmails(String username) {
+    String showEmails(String username) {
         String str = "User " + username + " is not valid";
         if(accounts.containsKey(username)) {
-            str = accounts.get(username).representEmails();
+            str = accounts.get(username).representMailbox();
         }
         return str;
     }
@@ -81,12 +159,12 @@ public class MailServer{
      * @return the string representation of desired e-mail. If there is no such e-mail (wrong index), it returns an
      * empty String.
      */
-    public String readEmail(String username, int id){
+    String readEmail(String username, int id){
         String str = "";
         if(accounts.containsKey(username)){
             Email email = accounts.get(username).getEmail(id);
             if(email != null){
-                str = email.toString();
+                str = "\n" + email.toString();
                 email.makeSeen();
             }
         }
@@ -99,129 +177,53 @@ public class MailServer{
      * @param id the specific e-mail to be deleted.
      * @return true if e-mail was deleted successfully (if it existed in users mailbox and then it was removed).
      */
-    public Boolean deleteEmail(String username, int id) {
+    synchronized boolean deleteEmail(String username, int id) {
         if(accounts.containsKey(username)){
             return accounts.get(username).deleteEmail(id);
         }
         return false;
     }
-
-    public Boolean logOut() {
-        return true;
-    }
-
-    public Boolean exit()  {
-        return true;
-    }
-
-    public static void main(String[] args) throws IOException{
-        ServerSocket ss = new ServerSocket(5000);
-        Socket socket = null;
-        MailServer server = new MailServer();
-        while(true) {
-            try {
-                socket = ss.accept();
-                System.out.println("New Connection: Accepted");
-                DataInputStream dis = new DataInputStream(socket.getInputStream());
-                DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-                Thread thread = new Session(server, socket, dis, dos);
-                thread.start();
-            } catch (Exception e) {
-                System.out.println(e);
-            }
-        }
-    }
 }
 
+/**
+ * Session represents the session between a MailClient and the MailServer.
+ * Server's protocol is implemented here.
+ *
+ * @author George Vasiliadis
+ * @version 7/1/21
+ */
 class Session extends Thread{
-    enum States{SESSION, REGISTER, LOGIN, LOGOUT, SHOW, READ, DELETE, NEW, EXIT, REGISTER_USERNAME, LOGIN_USERNAME};
-
+    private static int sessionCount = 0;
+    final private int sid;
     final private MailServer server;
-    final private Socket socket;
     final private DataInputStream dis;
     final private DataOutputStream dos;
-    private String loggedUser;
-    private States currentState;
-    private String response, request;
 
-
-    public Session(MailServer server, Socket socket, DataInputStream dis, DataOutputStream dos){
+    Session(MailServer server, DataInputStream dis, DataOutputStream dos){
         this.server = server;
-        this.socket = socket;
         this.dis = dis;
         this.dos = dos;
-        loggedUser = "";
-        currentState = States.SESSION;
-    }
-
-    private String generateResponse(String request){
-        String response = "Invalid entry!";
-        if(!request.isEmpty()){
-            if(currentState == States.SESSION) {
-                if (request.equalsIgnoreCase("login")) {
-                    response = "Username:";
-                    currentState = States.REGISTER_USERNAME;
-                } else if (request.equalsIgnoreCase("signin")) {
-                    response = "Username:";
-                    currentState = States.LOGIN_USERNAME;
-                } else if (request.equalsIgnoreCase("exit")) {
-                    response = "Bye!";
-                    currentState = States.EXIT;
-                }
-            } else if(currentState == States.REGISTER_USERNAME){
-            }
-        }
-        return response;
-    }
-
-    private void guestSession(){
-        try {
-            response = "You connected as guest\n" +
-                    "+ LogIn\n" +
-                    "+ SignIn\n" +
-                    "+ Exit\n";
-            dos.writeUTF(response);
-            while(true){
-                request = dis.readUTF();
-                System.out.println("I just read: " + request);
-                if(request.equalsIgnoreCase("login")){
-                    //do something
-                } else if(request.equalsIgnoreCase("signin")){
-                    //do something
-                } else if(request.equalsIgnoreCase("exit")){
-                    response = "bye\n";
-                    dos.writeUTF(response);
-                    socket.close();
-                } else {
-                    response = "Invalid entry!\n";
-                }
-                response += "+ LogIn\n" +
-                        "+ SignIn\n" +
-                        "+ Exit\n";
-                dos.writeUTF(response);
-            }
-
-        } catch (Exception e){
-            System.out.println(e);
-        }
+        sid = sessionCount++;
     }
 
     @Override
     public void run(){
+        System.out.println("Session #" + sid + " has started.");
         try {
-            // Inform for availability
-            dos.writeUTF("hello");
             String request;
             String response;
-            Boolean run = true;
+            boolean connected = true;
 
-            while(run){
+            // Guest Session
+            while(connected){
+
                 // Fetch request
                 request = dis.readUTF();
 
                 // Exit
                 if(request.equalsIgnoreCase("exit")){
-                    run = false;
+                    connected = false;
+                    System.out.println("Session #" + sid + " has been terminated.");
                 }
 
                 // Log-In
@@ -232,15 +234,17 @@ class Session extends Thread{
 
                     // Log user in
                     if(server.login(username, password)){
+                        // Accept client
                         dos.writeUTF("ok");
-                        loggedUser = username;
+                        boolean logged = true;
 
                         // Logged-In Session
-                        while(run){
+                        while(logged){
 
                             // Fetch request
                             request = dis.readUTF();
 
+                            // New Email
                             if(request.equalsIgnoreCase("newemail")){
 
                                 // Get Data
@@ -249,7 +253,7 @@ class Session extends Thread{
                                 String mainbody = dis.readUTF();
 
                                 // Send Email
-                                if(server.newEmail(loggedUser, receiver, subject, mainbody)){
+                                if(server.newEmail(username, receiver, subject, mainbody)){
                                     response = "ok";
                                 } else {
                                     response = "nok";
@@ -293,10 +297,15 @@ class Session extends Thread{
                                 dos.writeUTF(response);
                             }
 
-                            // Log User Out
+                            // Log Out
                             else if(request.equalsIgnoreCase("logout")){
-                                loggedUser = "";
-                                break;
+                                logged = false;
+                            }
+
+                            // Exit
+                            else if(request.equalsIgnoreCase("exit")){
+                                logged = connected = false;
+                                System.out.println("Session #" + sid + " has been terminated.");
                             }
                         }
                     } else {
@@ -323,7 +332,8 @@ class Session extends Thread{
             }
 
         } catch (IOException e){
-            e.printStackTrace();
+            System.out.println("An error has occurred while communicating with a client.");
+            System.out.println("Session #" + sid + " has been lost.");
         }
     }
 }

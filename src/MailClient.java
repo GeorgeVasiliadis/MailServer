@@ -4,374 +4,136 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 
+/**
+ * MailClient is a CLI-based program that lets a user create an e-mail account and interact with it.
+ *
+ * @author George Vasiliadis
+ * @version 7/1/21
+ */
 public class MailClient {
-    private static MailServerInterface mailServer;
-    private static Scanner input;
 
+    public static void main(String[] args){
+
+        // Get Server address info
+        print("MailServer's IP Address:");
+        String ip = read();
+        print("MailServer's Port:");
+        String port = read();
+
+        // Establish connection to server and run
+        try{
+            Socket socket = new Socket(ip, Integer.parseInt(port));
+            DataInputStream dis = new DataInputStream(socket.getInputStream());
+            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+            popup("Welcome to MailServer!");
+            guestSession(socket, dis, dos);
+        } catch (Exception e) {
+            print("Couldn't connect to server due to a fatal error. Please check connection to server and try again.");
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Simple substitute (alias) to System.out.println().
+     * @param message to be printed along with a new line
+     */
     private static void print(String message){
         System.out.println(message);
     }
 
+    /**
+     * Simple wrapper string to print given message in a unique way.
+     * String is framed simulating a GUI pop-up window.
+     * Should be used for any message that must stand out.
+     * @param message to be printed in a pop-up frame.
+     */
+    private static void popup(String message){
+        int len = message.length();
+        System.out.print("+");
+        for(int i=0; i<len; i++){
+            System.out.print("-");
+        }
+        System.out.print("+\n");
+        print("|" + message + "|");
+        System.out.print("+");
+        for(int i=0; i<len; i++){
+            System.out.print("-");
+        }
+        System.out.print("+\n");
+    }
+
+    /**
+     * Simple substitute (alias) to Scanner.nextLine().
+     * Prompts user with a special symbol to enter some text.
+     * @return tex entered by user without trailing new-line character.
+     */
     private static String read(){
+        System.out.print(">>> ");
         Scanner scanner = new Scanner(System.in);
         return scanner.nextLine();
     }
 
-    private static void printBanner(){
-        System.out.println("-------------");
-        System.out.println("MailServer:");
-        System.out.println("-------------");
-    }
-
-    private static void printGuestPrompt(){
-        print("==========");
-        print("> LogIn");
-        print("> SignIn");
-        print("> Exit");
-        print("==========");
-    }
-
-    private static void printUserPrompt(){
-        System.out.println("==========");
-        System.out.println("> NewEmail");
-        System.out.println("> ShowEmails");
-        System.out.println("> ReadEmail");
-        System.out.println("> DeleteEmail");
-        System.out.println("> Logout");
-        System.out.println("> Exit");
-        System.out.println("==========");
-    }
-
-    private static void printWelcome(){
-        printBanner();
-        System.out.println("Hello, you connected as a guest.");
-    }
-
-    private static void printBye(){
-        System.out.println("Thanks for using MailServer :D");
-        System.out.println("Goodbye!");
-    }
-
-    private static void userMenu(String username){
-        String command;
-        while(true){
-            printUserPrompt();
-            command = input.next();
-            if(command.equalsIgnoreCase("NewEmail")){
-                try {
-                    System.out.println("Receiver:");
-                    String receiver = input.next();
-                    System.out.println("Subject:");
-                    String subject = input.next();
-                    input.nextLine();
-                    System.out.println("Text:");
-                    String mainbody = input.nextLine();
-                    if (!(receiver.isEmpty() || subject.isEmpty() || mainbody.isEmpty())){
-                        System.out.println("Email was created successfully!");
-                    } else {
-                        System.out.println("Email couldn't be created.");
-                    }
-                    if (mailServer.newEmail(username, receiver, subject, mainbody)) {
-                        System.out.println("Email was sent successfully!");
-                    } else {
-                        System.out.println("Email was rejected. Please try again.");
-                    }
-                } catch (Exception e){
-                    System.out.println(e);
-                }
-            }else if(command.equalsIgnoreCase("ShowEmails")){
-                try{
-                    System.out.println(mailServer.showEmails(username));
-                } catch (Exception e){
-                    System.out.println(e);
-                }
-            } else if(command.equalsIgnoreCase("ReadEmail")){
-                System.out.println("Number of desired Email:");
-                int id = input.nextInt();
-                try {
-                    System.out.println(mailServer.readEmail(username, id));
-                }catch (Exception e){
-                    System.out.println(e);
-                }
-            } else if(command.equalsIgnoreCase("DeleteEmail")){
-                System.out.println("Number of Email to delete:");
-                int id = input.nextInt();
-                try{
-                    mailServer.deleteEmail(username, id);
-                } catch (Exception e){
-                    System.out.println(e);
-                }
-            } else if(command.equalsIgnoreCase("LogOut")){
-                break;
-            } else if(command.equalsIgnoreCase("Exit")){
-                printBye();
-                System.exit(0);
-            } else{
-                System.out.println("Command \"" + command + "\" is invalid.");
-            }
+    /**
+     * Closes connection and farwells user
+     * @param socket of current connection
+     * @param dos output stream of current connection
+     */
+    private static void exit(Socket socket, DataOutputStream dos){
+        try {
+            dos.writeUTF("exit");
+            socket.close();
+        } catch (IOException e){
+            print("Couldn't terminate connection to server properly.");
         }
+        popup("Thanks for using MailServer :D");
+        System.exit(0);
     }
 
-    private static void guestMenu(){
-        String command;
-
-        while(true) {
-            printGuestPrompt();
-            command = input.next();
-            if (command.equalsIgnoreCase("LogIn")) {
-                System.out.println("Username:");
-                String username = input.next();
-                System.out.println("Password:");
-                String password = input.next();
-                try {
-                    if(!mailServer.login(username, password)){
-                        System.out.println("Invalid username or password. Please try again");
-                    } else {
-                        System.out.println("Welcome back " + username + "!");
-                        userMenu(username);
-                    }
-                } catch (Exception e) {
-                    System.out.println(e);
-                }
-
-            } else if (command.equalsIgnoreCase("SignIn")) {
-                System.out.println("Provide a username:");
-                String username = input.next();
-                System.out.println("Provide a password:");
-                String password = input.next();
-                try {
-                    if(!mailServer.register(username, password)){
-                        System.out.println("User exists already. Try a different username.");
-                    } else {
-                        System.out.println("User " + username + " was registered successfully.");
-                    }
-                } catch (Exception e) {
-                    System.out.println(e);
-                }
-
-            } else if (command.equalsIgnoreCase("Exit")) {
-                printBye();
-                System.exit(0);
-            } else {
-                System.out.println("Command \"" + command + "\" is invalid.");
-            }
-        }
-
+    /**
+     * Simple output function that informs a guest user with available commands.
+     */
+    private static void printGuestMenu(){
+        print("=========");
+        print("o| LogIn");
+        print("o| SignIn");
+        print("o| Exit");
+        print("=========");
     }
 
-    public static void main(String[] args){
-        Scanner scanner = new Scanner(System.in);
-        print("MailServer IP Address:");
-        String ip = scanner.nextLine();
-        print("MailServer Port:");
-        int port = scanner.nextInt();
+    /**
+     * Simple output function that informs a logged-in user with available commands.
+     */
+    private static void printUserMenu(){
+        print("===============");
+        print("o| NewEmail");
+        print("o| ShowEmails");
+        print("o| ReadEmail");
+        print("o| DeleteEmail");
+        print("o| Logout");
+        print("o| Exit");
+        print("===============");
+    }
 
-        ip = "127.0.0.1";
-        port = 5000;
-        Socket socket = null;
-        DataInputStream dis;
-        DataOutputStream dos;
-        String response;
+    /**
+     * Implements the client's side protocol when user is connected as guest.
+     * @param socket of current connection
+     * @param dis input stream of current connection
+     * @param dos output stream of current connection
+     */
+    private static void guestSession(Socket socket, DataInputStream dis, DataOutputStream dos){
         String request;
+        String response;
 
-        try{
-            // Establish connection to server
-            socket = new Socket(ip, port);
-            dis = new DataInputStream(socket.getInputStream());
-            dos = new DataOutputStream(socket.getOutputStream());
+        popup("You are connected as guest.");
 
-            // Ensure server is listening
-            response = dis.readUTF();
-            if(!response.equalsIgnoreCase("hello")){
-                print("Couldn't establish connection to server.");
-                socket.close();
-                System.exit(1);
-            }
-
-            print("Connection to server was established successfully!");
-
-            // Main Loop
+        try {
             while(true) {
-                print("You are connected as guest.");
-                printGuestPrompt();
+                printGuestMenu();
                 request = read();
 
-                // Log-In
-                if(request.equalsIgnoreCase("login")){
-                    // Ask to start login procedure
-                    dos.writeUTF(request);
-
-                    // Username
-                    print("Username:");
-                    String username = read();
-                    dos.writeUTF(username);
-
-                    // Password
-                    print("Password:");
-                    String password = read();
-                    dos.writeUTF(password);
-
-                    // Check if login was successful
-                    response = dis.readUTF();
-                    if(response.equalsIgnoreCase("ok")){
-                        print("User " + username + " was successfully logged-in!");
-                        while(true) {
-                            // Print new prompt
-                            print("You are connected as " + username + ".");
-                            printUserPrompt();
-
-                            // Get request
-                            request = read();
-
-                            // Create new e-mail
-                            if (request.equalsIgnoreCase("newemail")) {
-
-                                // Ask to start creating a new e-mail
-                                dos.writeUTF(request);
-
-                                // Receiver
-                                print("Receiver");
-                                String receiver = read();
-                                dos.writeUTF(receiver);
-
-
-                                // Subject
-                                print("Subject:");
-                                String subject = read();
-                                dos.writeUTF(subject);
-
-                                // Main Body
-                                print("Main Body (enter \"<ok>\" to send):");
-                                String mainbody = "";
-                                String line;
-                                while(true){
-                                    line = read();
-                                    if(line.equalsIgnoreCase("<ok>")){
-                                        break;
-                                    }
-                                    mainbody += line + "\n";
-                                }
-                                dos.writeUTF(mainbody);
-
-                                response = dis.readUTF();
-                                if(response.equalsIgnoreCase("ok")){
-                                    print("E-mail was sent successfully!");
-                                } else {
-                                    print("Couldn't send e-mail.");
-                                }
-                            }
-
-                            // Show mailbox
-                            else if (request.equalsIgnoreCase("showemails")) {
-                                // Ask to start presenting e-mails
-                                dos.writeUTF(request);
-
-                                // Fetch Data
-                                response = dis.readUTF();
-
-                                // Display Data
-                                if(response.isEmpty()){
-                                    print("There are no e-mails yet.");
-                                } else {
-                                    print(response);
-                                }
-                            }
-
-                            // Read a specific email
-                            else if (request.equalsIgnoreCase("reademail")) {
-                                // Ask to start email-reading procedure
-                                dos.writeUTF(request);
-
-                                // Get index of desired e-mail
-                                String index;
-                                while(true){
-                                    print("E-mail ID to be read:");
-                                    index = read();
-                                    try{
-                                        int i = Integer.parseInt(index);
-                                        if (i >= 0){
-                                            break;
-                                        } else {
-                                            print("ID should be a non-negative integer.");
-                                        }
-                                    } catch (NumberFormatException e){
-                                        print("ID should be a non-negative integer.");
-                                    }
-                                }
-
-                                // Request a specific e-mail
-                                dos.writeUTF(index);
-
-                                // Fetch requested e-mail
-                                response = dis.readUTF();
-
-                                // Check e-mail validity
-                                if(!response.isEmpty()){
-                                    print(response);
-                                } else {
-                                    print("E-mail #" + index + " doesn't exist.");
-                                }
-                            }
-
-                            // Delete a specific email
-                            else if (request.equalsIgnoreCase("deleteemail")) {
-                                // Ask to start email-reading procedure
-                                dos.writeUTF(request);
-
-                                // Get index of desired e-mail to be deleted
-                                String index;
-                                while(true){
-                                    print("E-mail ID to be deleted:");
-                                    index = read();
-                                    try{
-                                        int i = Integer.parseInt(index);
-                                        if (i >= 0){
-                                            break;
-                                        } else {
-                                            print("ID should be a non-negative integer.");
-                                        }
-                                    } catch (NumberFormatException e){
-                                        print("ID should be a non-negative integer.");
-                                    }
-                                }
-
-                                // Request a specific e-mail
-                                dos.writeUTF(index);
-
-                                // Fetch response and inform user
-                                response = dis.readUTF();
-                                if(!response.isEmpty()){
-                                    print("E-mail #" + index + "was deleted successfully!");
-                                } else {
-                                    print("E-mail #" + index + " doesn't exist.");
-                                }
-                            }
-
-                            // Log user out
-                            else if (request.equalsIgnoreCase("logout")){
-                                dos.writeUTF(request);
-                                break;
-                            }
-
-                            // Exit
-                            else if (request.equalsIgnoreCase("exit")){
-                                print("Thanks for using MailServer :D");
-                                socket.close();
-                                System.exit(0);
-                            }
-
-                            // Typo
-                            else {
-                                print("Invalid Option.");
-                            }
-                        }
-                    } else {
-                        print("LogIn failed.\nPlease make sure you entered the right credentials.");
-                    }
-                }
-
                 // Sign-In
-                else if(request.equalsIgnoreCase("signin")){
+                if (request.equalsIgnoreCase("signin")) {
+
                     // Ask to start registration procedure
                     dos.writeUTF("signin");
 
@@ -387,27 +149,219 @@ public class MailClient {
 
                     // Check if registration was successful
                     response = dis.readUTF();
-                    if(response.equalsIgnoreCase("ok")){
-                        print("User " + username + " was successfully registered!");
+                    if (response.equalsIgnoreCase("ok")) {
+                        popup("User " + username + " was successfully registered!");
                     } else {
                         print("Registration failed.");
                     }
                 }
 
+                // Log-In
+                else if (request.equalsIgnoreCase("login")) {
+
+                    // Ask to start login procedure
+                    dos.writeUTF(request);
+
+                    // Username
+                    print("Username:");
+                    String username = read();
+                    dos.writeUTF(username);
+
+                    // Password
+                    print("Password:");
+                    String password = read();
+                    dos.writeUTF(password);
+
+                    // Check if login was successful
+                    response = dis.readUTF();
+                    if (response.equalsIgnoreCase("ok")) {
+                        userSession(username, socket, dis, dos);
+                        popup("You are connected as guest.");
+                    } else {
+                        print("LogIn failed.\nPlease make sure you entered the right credentials.");
+                    }
+                }
+
                 // Exit
-                else if(request.equalsIgnoreCase("exit")){
-                    print("Thanks for using MailServer :D");
-                    socket.close();
-                    System.exit(0);
+                else if (request.equalsIgnoreCase("exit")) {
+                     exit(socket, dos);
+                     break;
                 }
 
                 // Typo
                 else {
-                    print("Invalid Option.");
+                    print("Invalid option.");
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException e){
+            print("A fatal error occurred while communicating with server.");
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Implements the client's side protoco when user is logged-in.
+     * @param username of currently logged in user
+     * @param socket of current connection
+     * @param dis input stream of current connection
+     * @param dos output stream of current connection
+     */
+    private static void userSession(String username, Socket socket, DataInputStream dis, DataOutputStream dos){
+        String request;
+        String response;
+
+        try{
+            popup("You are connected as " + username + ".");
+            while (true) {
+                // Print new prompt
+                printUserMenu();
+
+                // Get request
+                request = read();
+
+                // Create new e-mail
+                if (request.equalsIgnoreCase("newemail")) {
+
+                    // Ask to start creating a new e-mail
+                    dos.writeUTF(request);
+
+                    // Receiver
+                    print("Receiver");
+                    String receiver = read();
+                    dos.writeUTF(receiver);
+
+
+                    // Subject
+                    print("Subject:");
+                    String subject = read();
+                    dos.writeUTF(subject);
+
+                    // Main Body
+                    print("Main Body (enter \"<ok>\" to send):");
+                    StringBuilder mainbody = new StringBuilder();
+                    String line;
+                    while (true) {
+                        line = read();
+                        if (line.equalsIgnoreCase("<ok>")) {
+                            break;
+                        }
+                        mainbody.append(line).append("\n");
+                    }
+                    dos.writeUTF(mainbody.toString());
+
+                    response = dis.readUTF();
+                    if (response.equalsIgnoreCase("ok")) {
+                        print("E-mail was sent successfully!");
+                    } else {
+                        print("Couldn't send e-mail.");
+                    }
+                }
+
+                // Show mailbox
+                else if (request.equalsIgnoreCase("showemails")) {
+                    // Ask to start presenting e-mails
+                    dos.writeUTF(request);
+
+                    // Fetch Data
+                    response = dis.readUTF();
+
+                    // Display Data
+                    if (response.isEmpty()) {
+                        print("There are no e-mails yet.");
+                    } else {
+                        print(response);
+                    }
+                }
+
+                // Read a specific email
+                else if (request.equalsIgnoreCase("reademail")) {
+                    // Ask to start email-reading procedure
+                    dos.writeUTF(request);
+
+                    // Get index of desired e-mail
+                    String index;
+                    while (true) {
+                        print("E-mail ID to be read:");
+                        index = read();
+                        try {
+                            int i = Integer.parseInt(index);
+                            if (i >= 0) {
+                                break;
+                            } else {
+                                print("ID should be a non-negative integer.");
+                            }
+                        } catch (NumberFormatException e) {
+                            print("ID should be a non-negative integer.");
+                        }
+                    }
+
+                    // Request a specific e-mail
+                    dos.writeUTF(index);
+
+                    // Fetch requested e-mail
+                    response = dis.readUTF();
+
+                    // Check e-mail validity
+                    if (!response.isEmpty()) {
+                        print(response);
+                    } else {
+                        print("E-mail #" + index + " doesn't exist.");
+                    }
+                }
+
+                // Delete a specific email
+                else if (request.equalsIgnoreCase("deleteemail")) {
+                    // Ask to start email-reading procedure
+                    dos.writeUTF(request);
+
+                    // Get index of desired e-mail to be deleted
+                    String index;
+                    while (true) {
+                        print("E-mail ID to be deleted:");
+                        index = read();
+                        try {
+                            int i = Integer.parseInt(index);
+                            if (i >= 0) {
+                                break;
+                            } else {
+                                print("ID should be a non-negative integer.");
+                            }
+                        } catch (NumberFormatException e) {
+                            print("ID should be a non-negative integer.");
+                        }
+                    }
+
+                    // Request a specific e-mail
+                    dos.writeUTF(index);
+
+                    // Fetch response and inform user
+                    response = dis.readUTF();
+                    if (response.equalsIgnoreCase("ok")) {
+                        print("E-mail #" + index + " was deleted successfully!");
+                    } else {
+                        print("E-mail #" + index + " doesn't exist.");
+                    }
+                }
+
+                // Log user out
+                else if (request.equalsIgnoreCase("logout")) {
+                    dos.writeUTF(request);
+                    break;
+                }
+
+                // Exit
+                else if (request.equalsIgnoreCase("exit")) {
+                    exit(socket, dos);
+                    break;
+                }
+
+                // Typo
+                else {
+                    print("Invalid option.");
+                }
+            }
+        } catch (Exception e){
+            print("A fatal error occurred while communicating with server.");
             System.exit(1);
         }
     }
