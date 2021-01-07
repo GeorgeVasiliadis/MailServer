@@ -1,6 +1,6 @@
-# Mail MailServer.MailServer
+#MailServer
 
-## What does MailServer.MailServer do
+## What does MailServer do
 #### Short answer:
 Nothing really :(
 #### Long answer:
@@ -16,7 +16,7 @@ This is a very simplistic approach of MailServer.Email server-client protocol, w
 
 ## How to use
 ### Prerequisites
-- Latest release from [releases center](https://github.com/GeorgeVasiliadis/MailServer/releases).
+- Latest release from [releases center](https://github.com/GeorgeVasiliadis/MailServer/releases)
 - Java 8+
 ### Steps to execute
 1. Run  `java -jar MailServer.jar`.
