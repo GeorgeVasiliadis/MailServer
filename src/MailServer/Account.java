@@ -1,3 +1,5 @@
+package MailServer;
+
 import java.util.ArrayList;
 
 /**

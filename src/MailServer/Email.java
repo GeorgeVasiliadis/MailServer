@@ -1,3 +1,5 @@
+package MailServer;
+
 /**
  * Email represents the e-mail entity.
  * It contains a sender, a receiver, a subject and the mainbody, as well as whether it has been read or not.

@@ -1,3 +1,5 @@
+package MailClient;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -184,8 +186,8 @@ public class MailClient {
 
                 // Exit
                 else if (request.equalsIgnoreCase("exit")) {
-                     exit(socket, dos);
-                     break;
+                    exit(socket, dos);
+                    break;
                 }
 
                 // Typo
