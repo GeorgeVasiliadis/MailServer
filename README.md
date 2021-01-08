@@ -1,4 +1,6 @@
-#MailServer
+# MailServer
+
+![Screenshot of working MailServer](https://github.com/GeorgeVasiliadis/MailServer/blob/master/res/Screenshot.PNG)
 
 ## What does MailServer do
 #### Short answer:
@@ -18,6 +20,7 @@ This is a very simplistic approach of MailServer.Email server-client protocol, w
 ### Prerequisites
 - Latest release from [releases center](https://github.com/GeorgeVasiliadis/MailServer/releases)
 - Java 8+
+
 ### Steps to execute
 1. Run  `java -jar MailServer.jar`.
 1. Provide a listening-port for server to run. Note down servers IP and provided port.
