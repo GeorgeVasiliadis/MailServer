@@ -9,12 +9,12 @@ Nothing really :(
 This project has been developed for academic reasons and thus it might not seem all that fancy.
 However, it is a good starting point for anyone who wants to get started with application layer protocols.
 Some cli-based, simple, general-mail features are provided:
-- MailServer.Account management
-- MailServer.Email creation/ deletion/ transmission
-- MailServer.Email preview
+- Account management
+- Email creation/ deletion/ transmission
+- Email preview
 
 ## About
-This is a very simplistic approach of MailServer.Email server-client protocol, written in Java.
+This is a very simplistic approach of Email server-client protocol, written in Java.
 
 ## How to use
 ### Prerequisites
@@ -29,6 +29,6 @@ This is a very simplistic approach of MailServer.Email server-client protocol, w
 1. Enjoy e-mailing (like... wow) 
 
 ## Contribution
-Feel free to extend any aspect of MailServer.MailServer. Contributions are being accepted via pull-requests on *forked* repos.
+Feel free to extend any aspect of MailServer. Contributions are being accepted via pull-requests on *forked* repos.
 
 *#ambitious*
