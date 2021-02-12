@@ -23,7 +23,7 @@ This is a very simplistic approach of Email server-client protocol, written in J
 
 ### Steps to execute
 1. Run  `java -jar MailServer.jar`.
-1. Provide a listening-port for server to run. Note down servers IP and provided port.
+1. Provide a listening-port for server to run. Note down the IP and the port (the one you just provided) of the server.
 1. Run `java -jar MailClient.jar`.
 1. Supply the MailClient with the noted IP and listening-port from earlier step.
 1. Enjoy e-mailing (like... wow) 
