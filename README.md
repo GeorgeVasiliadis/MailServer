@@ -4,9 +4,9 @@
 
 ## What does MailServer do
 #### Short answer:
-Nothing really :(
+Nothing really useful or cool :(
 #### Long answer:
-This project has been developed for academic reasons and thus it might not seem all that fancy.
+This project has been developed for academic purposes and thus it might not seem all that fancy.
 However, it is a good starting point for anyone who wants to get started with application layer protocols.
 Some cli-based, simple, general-mail features are provided:
 - Account management
